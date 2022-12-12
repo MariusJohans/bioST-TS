@@ -1,0 +1,69 @@
+---
+title: "Binary regression"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Binary regression
+
+In this example, we want to map the presence of high-elevation moss (Schistidium frisvollianum) as a function of height above sea level. In this experiment, researchers randomly checked their current elevation and logged if they could spot the moss in their immediate surroundings. For this analysis, we'll be using the packages ``ResourceSelection``, ``ggpubr``, ``readxl``. and ``scales``. Let's start by downloading the data set **Gadus morhua.xlsx** from **[https://github repository not yet added]** and importing the data;
+
+````{r}
+library(ResourceSelection)
+library(ggpubr)
+library(readxl)
+library(scales)
+
+Data <- read_excel("Schistidium frisvollianum.xlsx")
+````
+
+Since we are dealing with binary data (our response variable is *present/non-present*), we could try to visualize the data using a box plot;
+
+````{r}
+boxplot(Data$Altitude ~ Data$Presence, 
+        xlab = "Presence of frisvollianuma",
+        ylab = "Altitude", 
+        names = c("Absent", "Present"),
+        varwidth = TRUE)
+````
+
+From a visual inspection it appears that the moss is more present at higher altitudes. This can be investigated further;
+
+````{r}
+wilcox.test(Data$Altitude ~ Data$Presence)
+````
+
+From the output we see that there is indeed a significant difference in the altitude at which the moss is observed at. Using a *generalised linear model*, or more specifically, **a binary regression**, we can investigate this probability distribution in greater detail;
+
+````{r}
+model_binary <- glm(Data$Presence ~ Data$Altitude, family = binomial)
+summary(model_binary)
+````
+
+From the output we see that the estimated coefficients are significant (p < 0.05). Moreover, the coefficient of the altitude is positive, meaning there is an increasing probability of observing frisvollianuma as the altitude increases! Next, let's make a plot depicting our binomial regression,
+
+````{r}
+ggplot(Data, aes(x = Altitude, y = Presence)) +
+  geom_point() +
+  geom_smooth(method = "glm",
+              method.args = list(family = binomial),
+              colour = "black") +
+  scale_y_continuous(breaks = c(0, 1)) +
+  labs(y = "P(presence)", x = "Altitude", labels = percent) +
+  ggtitle("Probability of observing Schistidium as a function of altitude") + 
+  theme_bw()
+````
+
+Finally, we can check how good our binomial model fits the data using the *Hosmer-Lemeshow Goodness of Fit test*;
+
+````{r}
+hoslem.test(Data$Presence, fitted(model_binary))
+````
+
+For the Hosmer-Lemeshow test, which only applies to binomial models, a non-significant p-value implies a good model fit to the data. From the output of our analysis we see a non-significant p-value and hence the null hypothesis (i.e., the model fits our data) can not be rejected!
+
+
+
