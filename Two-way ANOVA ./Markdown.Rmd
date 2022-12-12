@@ -1,5 +1,5 @@
 ---
-title: "An interesting title"
+title: ""
 output: html_document
 ---
 
