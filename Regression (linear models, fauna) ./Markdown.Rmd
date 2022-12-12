@@ -1,0 +1,53 @@
+---
+title: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Linear regression
+
+In this example, we are going to investigate if there is a linear relationship betweem mantle length and body weight in Moroteuthis ingens. Let's start by downloading the data set **Moroteuthis ingens.xlsx** from **[https://github repository not yet added]**. For this analysis, we'll be using the packages ``ggpubr`` and ``readxl``. Let's first import and check the data;
+
+```` {r} 
+library(ggpubr)
+library(readxl)
+
+Data <- read_excel("Moroteuthis ingens.xlsx")
+head(Data, 10)
+````
+
+From the output we can see that the data set contains two variables, ``Weight [g]`` and ``Mangle length [mm]``. Let's first plot these variables in a scatter plot and investigate if there is any linear dependency between these variables;
+
+```` {r}
+ggplot(Data, aes(x = `Mantle length [mm]`, y = `Weight [g]`)) +
+  geom_point() +
+  xlab("Mantle length [mm]") +
+  ylab("Weight [g]") +
+  theme_bw()
+````
+
+It certainly looks like there is some linear relationship between these two variables by visual inspection. Let's add merit to our hypothesis by testing a **linear model**, using
+
+````{r}
+linear_model <- lm(`Weight [g]` ~ `Mantle length [mm]`, data = Data)
+summary(linear_model)
+````
+
+There are some key takeaways from this output. First, our *intercept* (β<sub>0</sub>) is non-significant. This means that the intercept of our model can not be distinguished from zero. Next, we see a significant *effect* from ``Mantle length``, where β<sub>1</sub> = 2.41. Further, we find an R<sup>2</sup> of 0.75, meaning that our model explains 75% of the variance in the data. Finally, let's plot the data together with our linear model,
+
+````{r}
+ggplot(Data, aes(x = `Mantle length [mm]`, y = `Weight [g]`)) +
+  geom_point() +
+  xlab("Mantle length [mm]") +
+  ylab("Weight [g]") +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+````
+
+
+
+
