@@ -1,0 +1,55 @@
+---
+title: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Linear regression - Example B
+
+Evergreen plants are a major constituent in ecological systems across the world. In this example, we are going to investigate phenotypic traits of evergreen angiosperms. More specifically, we want to investigate the trait relationship between *leaf mass per area* (LMA) and *work to shear*. Let's start by download the data set **LMA.xls** from **[https://github repository not yet added]**. For this analysis, we'll be using the packages ``ggpubr`` and ``readxl``. Let's first import and check the data;
+
+```` {r} 
+library(ggpubr)
+library(readxl)
+
+Data <- read_excel("LMA.xlsx")
+head(Data, 10)
+````
+
+
+From the output we can see that the data set contains two variables, ``LMA`` and ``Work to shear``. Let's first plot these variables in a scatter plot and investigate if there is any linear dependency between these variables;
+
+```` {r}
+ggplot(Data, aes(x = LMA, y = `Work to shear`)) +
+  geom_point() +
+  xlab(bquote(LMA (gm^-2))) +
+  ylab(bquote('Work to shear' (Jm^-1))) +
+  theme_bw()
+````
+
+It certainly looks like there is some linear relationship between these two variables by visual inspection. Let's add merit to our hypothesis by testing a **linear model**, using
+
+````{r}
+linear_model <- lm(`Work to shear` ~ LMA, data = Data)
+summary(linear_model)
+````
+
+There are some key takeaways from this output. First, both the *intercept* (β<sub>0</sub>) and the *effect* (β<sub>1</sub>) are significant. Further, we find an R<sup>2</sup> of 0.95, meaning that our model explains 95% of the variance in the data. Finally, let's plot the data together with our linear model,
+
+````{r}
+ggplot(Data, aes(x = LMA, y = `Work to shear`)) +
+  geom_point() +
+  xlab(bquote(LMA (gm^-2))) +
+  ylab(bquote('Work to shear' (Jm^-1))) +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+````
+
+
+
+
+
