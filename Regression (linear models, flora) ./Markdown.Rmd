@@ -7,7 +7,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Linear regression - Example B
+## Linear regression
 
 Evergreen plants are a major constituent in ecological systems across the world. In this example, we are going to investigate phenotypic traits of evergreen angiosperms. More specifically, we want to investigate the trait relationship between *leaf mass per area* (LMA) and *work to shear*. Let's start by download the data set **LMA.xls** from **[https://github repository not yet added]**. For this analysis, we'll be using the packages ``ggpubr`` and ``readxl``. Let's first import and check the data;
 
