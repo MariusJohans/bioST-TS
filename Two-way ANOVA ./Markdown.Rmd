@@ -1,0 +1,85 @@
+---
+title: "An interesting title"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Two-way ANOVA
+
+In this example, an industry leading producer of fish pellets is interested in finding out which types of pellet has the biggest impact on biomass in cod. However, due to a concerning report claiming these pellets negatively affect female cod appetite, the producer has tasked you to investigate if the effect of the pellets is also somehow affected by the gender of the cod. In other words, we want to investigate treatment effects (for three different feed types), but there is another categorical predictor as well, ``Sex``. A two-way ANOVA could therefore shed light on this problem. Let's start by downloading the data set **Gadus morhua.xls** from **[https://github repository not yet added]**. For this analysis, we'll use the packages ``car``, ``ggpubr``, and ``readxl``. Let's first import and check the data;
+
+```` {r}
+library(ggplot2)
+library(ggpubr)
+library(car)
+library(readxl)
+
+Data <- read_excel("Gadus morhua.xlsx")
+head(Data, 10)
+````
+
+From the output we can see that the dataset contains three variables: ``Sex`` (a categorical factor), ``Feed type`` (also a categorical factor), and ``Mass [g]`` (a continous variable). It is always a good idea to start by visualizing the data;
+
+```` {r}
+ggplot(Data, aes(x = `Feed type`, y = `Mass [g]`, fill = Sex)) +
+  geom_boxplot() +
+  xlab("Feed type") +
+  ylab("Mass [g]") +
+  guides(fill=guide_legend(title="Sex")) +
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+````
+
+It certainly looks like there are some trends here, so let's break out our statistical toolbox and investigate these data further. We mentioned earlier that a two-way ANOVA could be a good approach, but we have to make sure that all our statistical assumptions are met. First, **the observations have to be independent**. Second, the underlying distributions for the groups have to be **normally distributed**. And finally, the variances of the different groups have to be equal (also known as homoscedasticity/homogeneity). 
+
+To check for normality, we can use the **Shapiro-Wilk test**;
+
+```` {r}
+shapiro.test(Data$`Mass [g]`[Data$`Feed type` == "Alo-07"])
+shapiro.test(Data$`Mass [g]`[Data$`Feed type` == "Beta-07"])
+shapiro.test(Data$`Mass [g]`[Data$`Feed type` == "Cano-07"])
+shapiro.test(Data$`Mass [g]`[Data$Sex == "M"])
+shapiro.test(Data$`Mass [g]`[Data$Sex == "F"])
+````
+
+All tests indicate non-significant p-values (p > 0.05), meaning that these distributions do not differ significantly from a normal distribution so we can assume normality! Next we need to check for equal variance. Since we have more than two groups, we should use Levene's test to check for equal variances; 
+
+```` {r}
+leveneTest(Data$`Mass [g]` ~ Data$`Feed type`, center = mean)
+````
+Since we get a non-significant p-value we can therefore assume that there are no differences in the variances between the groups! Since we met all our assumptions, we can now carry on with a two-way ANOVA. Let's first investigate a model where we include interaction terms;
+
+```` {r}
+model1 <- aov(Data$`Mass [g]` ~ Data$`Feed type` * Data$Sex)
+summary(model1)
+````
+From the output, we can see that the interaction term "Feed type":"Sex" is non-significant. We can therefore test a simpler model without this interaction term using
+
+````{r}
+model2 <- aov(Data$`Mass [g]` ~ Data$`Feed type` + Data$Sex)
+summary(model2)
+````
+
+According to the output, we have significant p-values (p < 0.05) for both feed type and sex, meaning that both feed type and sex explain a significant amount of variation in salmon weight. The next step is to figure out which levels differ from each other. We can investigate this using a Tukey Honest Significant Difference Test,
+
+````{r}
+TukeyHSD(model2)
+````
+
+The output shows pairwise differences between groups. From the post hoc results, we see that there are significant differences between
+
+Feed Alo-07 and Beta-07
+
+Feed Beta-07 and Cano-07
+
+Sex
+
+No difference between Feed Alo-07 and Cano-07
+
+
+
+
+
