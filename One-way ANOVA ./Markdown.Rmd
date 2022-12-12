@@ -1,0 +1,89 @@
+---
+title: "An interesting title"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## One-way ANOVA
+
+In this example, a company wants us to determine if the introduction of new chemical delicing compounds affects the weight of salmon. In the experiment, salmon were treated with either "A1xrt", "B72kH", "C72cx", or received no treatment (control group). First, download the dataset **Salmo salar** from **[https://github repository not yet added]**. For this analysis, we'll use the packages **ggplot2**, **car**, and **readxl**. Let's first import and check the data;
+
+````{r}
+library(ggplot2)
+library(ggpubr)
+library(car)
+library(readxl)
+
+Data <- read_excel("Salmo salar.xlsx")
+head(Data, 10)
+````
+From the output we can see that the dataset contains the variables `Chemical agent` (a categorical variable), ``Mass [g]`` (a continuous variable), and ``Date``. It's always a good idea to start by visualizing the data;
+
+```` {r}
+ggplot(Data, aes(x = `Chemical agent`, y = `Mass [g]`)) +
+  geom_boxplot(aes(fill = factor(`Chemical agent`))) +
+  xlab("Chemical agent") +
+  ylab("Mass [g]") +
+  guides(fill = guide_legend(title = "Treatment")) +
+  theme_bw() + theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+                     panel.grid.minor = element_blank(), axis.line = element_line(colour = "black"))
+````
+
+Since we were tasked with determining if there is an effect of the various treatments, a good starting point would be to use an ANOVA. In order to perform an ANOVA, there are however some assumptions that need to be met. First, the observations have to be **independent** (meaning that each individual is measured by only 1 observation). Second, each group must follow a **normal distribution**. And finally, the **population variances have to be equal**. 
+
+However, before we start with any analyses when using categorical data, we have to be sure that R understands that our categorical variable is a factor. In our example, R will automatically recognize the type of variable because it entails letters, but if the naming convention of the four groups were 1, 2, 3, and 4 we could run into problems! Just to be sure we can include
+
+```` {r}
+Data$`Chemical agent` <- factor(Data$`Chemical agent`)
+````
+which tells R that our predictor variable in our ANOVA later on is actually a factor. Next, to check if the biomass distributions are normally distributed, we can use the **Shapiro-Wilk test**. Recall that the R format is given by
+
+````
+shapiro.test(Variable[Grouping factor])
+````
+or in our example,
+
+```` {r}
+shapiro.test(Data$`Mass [g]`[Data$`Chemical agent` == "A1xrt"])
+shapiro.test(Data$`Mass [g]`[Data$`Chemical agent` == "B72kH"])
+shapiro.test(Data$`Mass [g]`[Data$`Chemical agent` == "C72cx"])
+shapiro.test(Data$`Mass [g]`[Data$`Chemical agent` == "Control"])
+````
+All four tests indicate non-significant p-values (p > 0.05). This means that none of the distributions significantly differ from a normal distribution so we can assume normality! Next we need to check for equal variances (homoscedasticity). Since we have more than two groups, we should use Levene's test to check for equal variances;
+
+
+```` {r}
+leveneTest(`Mass [g]` ~ `Chemical agent`, data = Data, center = mean)
+````
+The p-value of the test is 0.9696 > 0.05, indicating that there are no significant differences in variance between the four groups. Since we didn't violate any assumptions, we can now perform an ANOVA. There are many different syntaxes one can use to perform ANOVAs in R, one syntax is
+
+````
+model <- aov(Response variable ~ Categorical predictor)
+
+````
+which in our example would translate to
+
+```` {R}
+model <- aov(Data$`Mass [g]` ~ Data$`Chemical agent`)
+````
+Finally, we can print the results of the ANOVA using the `summary()` function;
+
+```` {r}
+summary(model)
+````
+From the output we can see a significant p-value (p < 0.05), meaning that at least one of the groups differ from the other! The next question is naturally "but where is the difference?". In order to determine which groups (treatments)
+differ from each other, we need to perform a **post-hoc test**. A very commonly used post-hoc test for ANOVAs is **Tukey's Honest Significant Difference Test** (HSD);
+
+
+
+```` {r}
+model <- aov(Data$`Mass [g]` ~ Data$`Chemical agent`)
+TukeyHSD(model)
+````
+
+From the Tukey test we can see that there is a difference between A1xrt and B72kh, A1xrt and the control group, B72kh and C72cx, and C72cx and the control group. Referring to the plot we just made this indicates that two of the chemical treatments, A1xrt and C72cx, lowers the biomass of the salmon.
+
+
